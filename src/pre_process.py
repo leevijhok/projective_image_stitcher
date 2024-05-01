@@ -4,11 +4,11 @@ Renames the target images into the proper format.
 
 """
 
-
 import os
 import argparse
 import cv2
 from PIL import Image
+
 
 def rename_files(src_folder):
     # Get list of files in the folder
@@ -26,15 +26,18 @@ def rename_files(src_folder):
         _, extension = os.path.splitext(file)
 
         # Check if the file is an image (you may want to adjust this check based on your file types)
-        if extension.lower() in ['.png', '.jpg', '.jpeg', '.gif']:
+        if extension.lower() in [".png", ".jpg", ".jpeg", ".gif"]:
             # Construct new file name with leading zeros
             new_name = f"{count:03d}{extension}"
-            
+
             # Rename the file
-            os.rename(os.path.join(src_folder, file), os.path.join(src_folder, new_name))
-            
+            os.rename(
+                os.path.join(src_folder, file), os.path.join(src_folder, new_name)
+            )
+
             # Increment counter
             count += 1
+
 
 def lower_resolution_in_folder(folder_path, output_folder, scale_percent):
     """
@@ -59,7 +62,7 @@ def lower_resolution_in_folder(folder_path, output_folder, scale_percent):
     # Loop through each file in the folder
     for file_name in file_list:
         # Check if the file is an image (ending with .jpg, .png, etc.)
-        if file_name.lower().endswith(('.png', '.jpg', '.jpeg', '.bmp', '.tif')):
+        if file_name.lower().endswith((".png", ".jpg", ".jpeg", ".bmp", ".tif")):
             # Read the image
             img = cv2.imread(os.path.join(folder_path, file_name))
 
@@ -76,10 +79,13 @@ def lower_resolution_in_folder(folder_path, output_folder, scale_percent):
             cv2.imwrite(output_path, resized_img)
 
             # Update metadata for JPEG images
-            if file_name.lower().endswith('.jpg') or file_name.lower().endswith('.jpeg'):
+            if file_name.lower().endswith(".jpg") or file_name.lower().endswith(
+                ".jpeg"
+            ):
                 update_jpeg_metadata(output_path, width, height)
 
             print(f"Image '{file_name}' resized and saved to '{output_path}'.")
+
 
 def update_jpeg_metadata(image_path, width, height):
     """
@@ -109,27 +115,50 @@ def update_jpeg_metadata(image_path, width, height):
         print(f"Error updating metadata for image '{image_path}': {e}")
 
 
-def pre_process_all(src_folder, 
-                trg_folder, 
-                src_folder2, 
-                trg_folder2, 
-                filetype, 
-                lower_resolution=False):
-    
-    #rename_files(args.src_folder)
+def pre_process_all(
+    src_folder, trg_folder, src_folder2, trg_folder2, filetype, lower_resolution=False
+):
+
+    # rename_files(args.src_folder)
     lower_resolution_in_folder(src_folder, trg_folder, 30)
     lower_resolution_in_folder(src_folder2, trg_folder2, 30)
 
 
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Pre-processess the images.')
-    parser.add_argument('-src_folder', type=str, default="..\data\raw\demo_1_high", help='The name of the source folder.')
-    parser.add_argument('-trg_folder', type=str, default="..\data\processed\demo_1", help='The name of the target folder.')
-    parser.add_argument('-src_folder2', type=str, default="...\data\raw\Chessboard_high", help='The name of the source folder.')
-    parser.add_argument('-trg_folder2', type=str, default="..\data\processed\Chessboard", help='The name of the target folder.')
-    parser.add_argument('-filetype', type=str, default="png", help='The target image file-type.')
-    parser.add_argument('-lower_resolution', type=str, default=False, help='Lowers the resolution of input images.')
+    parser = argparse.ArgumentParser(description="Pre-processess the images.")
+    parser.add_argument(
+        "-src_folder",
+        type=str,
+        default=r"..\data\raw\demo_1_high",
+        help="The name of the source folder.",
+    )
+    parser.add_argument(
+        "-trg_folder",
+        type=str,
+        default=r"..\data\processed\demo_1",
+        help="The name of the target folder.",
+    )
+    parser.add_argument(
+        "-src_folder2",
+        type=str,
+        default=r"...\data\raw\Chessboard_high",
+        help="The name of the source folder.",
+    )
+    parser.add_argument(
+        "-trg_folder2",
+        type=str,
+        default=r"..\data\processed\Chessboard",
+        help="The name of the target folder.",
+    )
+    parser.add_argument(
+        "-filetype", type=str, default="png", help="The target image file-type."
+    )
+    parser.add_argument(
+        "-lower_resolution",
+        type=str,
+        default=False,
+        help="Lowers the resolution of input images.",
+    )
     args = parser.parse_args()
     rename_files(args.src_folder)
     lower_resolution_in_folder(args.src_folder, args.trg_folder, 30)

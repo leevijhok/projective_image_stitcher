@@ -1,9 +1,9 @@
-
 import os
 import numpy as np
 import cv2
 from matplotlib import pyplot as plt
 import argparse
+
 
 def rename_files(folderName, files):
 
@@ -16,17 +16,20 @@ def rename_files(folderName, files):
         _, extension = os.path.splitext(file)
 
         # Check if the file is an image (you may want to adjust this check based on your file types)
-        if extension.lower() in ['.png', '.jpg', '.jpeg', '.gif']:
+        if extension.lower() in [".png", ".jpg", ".jpeg", ".gif"]:
             # Construct new file name with leading zeros
             new_name = f"{count:03d}{extension}"
-            
+
             # Rename the file
-            os.rename(os.path.join(folderName, file), os.path.join(folderName, new_name))
-            
+            os.rename(
+                os.path.join(folderName, file), os.path.join(folderName, new_name)
+            )
+
             # Increment counter
             count += 1
 
-def get_images(folderName, pre_process = False):
+
+def get_images(folderName, pre_process=False):
 
     images = []
 
@@ -47,7 +50,6 @@ def get_images(folderName, pre_process = False):
 
     image_shape = (images[0].shape[0], images[0].shape[1])
 
-        
     return images, image_shape
 
 
@@ -58,10 +60,10 @@ def displayImages(img1, img2):
 
     # Plot each image on its corresponding axis
     axes[0].imshow(cv2.cvtColor(img1, cv2.COLOR_BGR2RGB))
-    axes[0].set_title('Non-warped panorama')
+    axes[0].set_title("Non-warped panorama")
 
     axes[1].imshow(cv2.cvtColor(img2, cv2.COLOR_BGR2RGB))
-    axes[1].set_title('Cylindrically warped panorama with bundle adjustment')
+    axes[1].set_title("Cylindrically warped panorama with bundle adjustment")
 
     plt.tight_layout()
     plt.show()

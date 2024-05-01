@@ -2,19 +2,18 @@ import cv2
 import numpy as np
 
 
+def getSIFTKeypointsAndDescriptors(images: list):
 
-def getSIFTKeypointsAndDescriptors(images : list):
+    # Initialize SIFT detector
+    sift = cv2.SIFT_create(contrastThreshold=0.02, edgeThreshold=10)
 
-        # Initialize SIFT detector
-    sift = cv2.SIFT_create(contrastThreshold = 0.02, edgeThreshold = 10)
-    
     # List to store keypoints and descriptors of all images
     keypoints_list = []
     descriptors_list = []
 
     # Extract SIFT keypoints and descriptors for each image
     for img in images:
-        
+
         # Convert image to grayscale
         gray = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
 
@@ -22,8 +21,8 @@ def getSIFTKeypointsAndDescriptors(images : list):
         gray = cv2.equalizeHist(gray)
 
         # Apply Laplacian sharpening
-        #blurred = cv2.GaussianBlur(gray, (0, 0), 3)
-        #gray = cv2.addWeighted(gray, 1.5, blurred, -1.0, 0)
+        # blurred = cv2.GaussianBlur(gray, (0, 0), 3)
+        # gray = cv2.addWeighted(gray, 1.5, blurred, -1.0, 0)
 
         # Detect keypoints and compute descriptors
         keypoints, descriptors = sift.detectAndCompute(gray, None)
@@ -34,12 +33,15 @@ def getSIFTKeypointsAndDescriptors(images : list):
         # Check if descriptors are computed successfully
         if descriptors is not None and descriptors.ndim == 2:
             # L2 normalize descriptors
-            descriptors /= (np.linalg.norm(descriptors, axis=1, keepdims=True) + 1e-6)
+            descriptors /= np.linalg.norm(descriptors, axis=1, keepdims=True) + 1e-6
             descriptors_list.append(descriptors)
         else:
-            print(f"Descriptors not computed successfully for image {len(keypoints_list) - 1}")
+            print(
+                f"Descriptors not computed successfully for image {len(keypoints_list) - 1}"
+            )
 
     return keypoints_list, descriptors_list
+
 
 def getORBKeypointsAndDescriptors(images):
     # Initialize ORB detector
@@ -58,9 +60,7 @@ def getORBKeypointsAndDescriptors(images):
         gray = cv2.equalizeHist(gray)
 
         # Apply sharpening to enhance edges
-        kernel = np.array([[-1, -1, -1],
-                           [-1, 9, -1],
-                           [-1, -1, -1]])
+        kernel = np.array([[-1, -1, -1], [-1, 9, -1], [-1, -1, -1]])
         sharpened = cv2.filter2D(gray, -1, kernel)
 
         # Detect keypoints and compute descriptors
@@ -73,7 +73,9 @@ def getORBKeypointsAndDescriptors(images):
         if descriptors is not None and descriptors.ndim == 2:
             descriptors_list.append(descriptors)
         else:
-            print(f"Descriptors not computed successfully for image {len(keypoints_list) - 1}")
+            print(
+                f"Descriptors not computed successfully for image {len(keypoints_list) - 1}"
+            )
 
     return keypoints_list, descriptors_list
 
@@ -92,7 +94,7 @@ def getBRISKKeypointsAndDescriptors(images):
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         # Apply histogram equalization to improve contrast
-        #gray = cv2.equalizeHist(gray)
+        # gray = cv2.equalizeHist(gray)
 
         # Apply Laplacian sharpening to enhance edges
         sharpened = cv2.Laplacian(gray, cv2.CV_64F)
@@ -108,7 +110,9 @@ def getBRISKKeypointsAndDescriptors(images):
         if descriptors is not None and descriptors.ndim == 2:
             descriptors_list.append(descriptors)
         else:
-            print(f"Descriptors not computed successfully for image {len(keypoints_list) - 1}")
+            print(
+                f"Descriptors not computed successfully for image {len(keypoints_list) - 1}"
+            )
 
     return keypoints_list, descriptors_list
 
@@ -139,7 +143,9 @@ def getSURFKeypointsAndDescriptors(images):
         if descriptors is not None and descriptors.ndim == 2:
             descriptors_list.append(descriptors)
         else:
-            print(f"Descriptors not computed successfully for image {len(keypoints_list) - 1}")
+            print(
+                f"Descriptors not computed successfully for image {len(keypoints_list) - 1}"
+            )
 
     return keypoints_list, descriptors_list
 
@@ -202,7 +208,9 @@ def getAKAZEKeypointsAndDescriptors(images):
         if descriptors is not None and descriptors.ndim == 2:
             descriptors_list.append(descriptors)
         else:
-            print(f"Descriptors not computed successfully for image {len(keypoints_list) - 1}")
+            print(
+                f"Descriptors not computed successfully for image {len(keypoints_list) - 1}"
+            )
 
     return keypoints_list, descriptors_list
 
@@ -213,10 +221,14 @@ def matchDescriptors(descriptors_list, distance_ratio_threshold=0.80, nMatches=1
     for i in range(len(descriptors_list) - 1):
 
         # Brute-force matching:
-        bf = cv2.BFMatcher(cv2.NORM_L2, crossCheck=False)  # Disable crossCheck for ratio test
-    
+        bf = cv2.BFMatcher(
+            cv2.NORM_L2, crossCheck=False
+        )  # Disable crossCheck for ratio test
+
         # Finding the nearest neighbors:
-        matches = bf.knnMatch(descriptors_list[i], descriptors_list[i + 1], k=2)  # k=2 for ratio test
+        matches = bf.knnMatch(
+            descriptors_list[i], descriptors_list[i + 1], k=2
+        )  # k=2 for ratio test
 
         if matches is None:
             print(f"No matches found between descriptors {i} and {i+1}")
@@ -235,7 +247,7 @@ def matchDescriptors(descriptors_list, distance_ratio_threshold=0.80, nMatches=1
         # Select top-n matches
         good_matches = good_matches[:nMatches]
 
-        if(len(good_matches) < 8):
+        if len(good_matches) < 8:
             print(f"{i}: Not enough matches to triangulation")
 
         matched_descriptor_list.append(good_matches)
@@ -247,7 +259,7 @@ def matchPoints(keypoints_list, matched_descriptor_list):
 
     points2d_list1 = []
     points2d_list2 = []
-    
+
     for i in range(len(matched_descriptor_list)):
 
         matches = matched_descriptor_list[i]
@@ -258,39 +270,45 @@ def matchPoints(keypoints_list, matched_descriptor_list):
             print("Error: Insufficient matches for triangulation")
 
         # Image points
-        pts1 = np.float32([keypoints1[m.queryIdx].pt for m in matches]).reshape(-1, 1, 2)
-        pts2 = np.float32([keypoints2[m.trainIdx].pt for m in matches]).reshape(-1, 1, 2)
+        pts1 = np.float32([keypoints1[m.queryIdx].pt for m in matches]).reshape(
+            -1, 1, 2
+        )
+        pts2 = np.float32([keypoints2[m.trainIdx].pt for m in matches]).reshape(
+            -1, 1, 2
+        )
 
         # Append the projected 2D points to the list
         points2d_list1.append(pts1)
         points2d_list2.append(pts2)
-    
+
     return points2d_list1, points2d_list2
+
 
 def getHomographies(points2d_list1, points2d_list2):
 
     homographies = []
 
     for pts1, pts2 in zip(points2d_list1, points2d_list2):
-            # Append homographies:                
+        # Append homographies:
         H, _ = cv2.findHomography(pts1, pts2, cv2.RANSAC, 5.0)
         homographies.append(H)
 
     return homographies
 
+
 def blendWarp(images, homographies):
-    
+
     # Final output panorama:
     panorama = None
 
     for i in range(len(homographies)):
         image1 = images[i]
-        image2 = images[i+1]
+        image2 = images[i + 1]
         H = homographies[i]
 
         # Warp the first image using the homography
         result = cv2.warpPerspective(image1, H, (image2.shape[1], image2.shape[0]))
-        
+
         # Check if it's the first iteration, if so, initialize panorama with the first warped image
         if panorama is None:
             panorama = result
@@ -300,9 +318,8 @@ def blendWarp(images, homographies):
             panorama = cv2.addWeighted(result, alpha, panorama, 1 - alpha, 0)
 
         # Display the image in a window
-        #cv2.imshow('Image', panorama)
-        #cv2.waitKey(0)
-        #cv2.destroyAllWindows()
+        # cv2.imshow('Image', panorama)
+        # cv2.waitKey(0)
+        # cv2.destroyAllWindows()
 
     return panorama
-
