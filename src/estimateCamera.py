@@ -3,6 +3,33 @@ import numpy as np
 from scipy.optimize import minimize
 
 
+def calibrate_camera_known( horizontal_view_angle_degrees = 31.4,
+                            image_width_pixels = 1624,
+                            image_height_pixels = 1240):
+    """Calibrates camera via known parameters"""
+
+
+    # Convert horizontal view angle to radians
+    horizontal_view_angle_radians = np.radians(horizontal_view_angle_degrees)
+
+    # Calculate focal length in pixels
+    focal_length_pixels = (image_width_pixels * 0.5) / np.tan(horizontal_view_angle_radians * 0.5)
+
+    # Principal point (assuming image center)
+    cx = image_width_pixels / 2
+    cy = image_height_pixels / 2
+
+    # Form calibration matrix K
+    K = np.array([[focal_length_pixels, 0,                   cx],
+                  [0,                   focal_length_pixels, cy],
+                  [0,                   0,                   1]])
+    
+    # Initialize distortion coefficients (can be set to zeros for simplicity)
+    # These can be estimated in bundle adjustment.
+    dist_coeffs = np.zeros((5, 1))
+    
+    return K, dist_coeffs
+
 def calibrate_camera(images, boardShape=(8, 6)):
     # Prepare object points, considering the size of squares
     objp = np.zeros((boardShape[0] * boardShape[1], 3), np.float32)
