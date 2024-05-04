@@ -21,11 +21,18 @@ def main(args):
     images, img_shape = get_images(folderName=args.calibName, pre_process=False)
     K, dist_coeffs = calibrate_camera(images=images, boardShape=(8, 6))
 
+    # Camera is calibrated:
+    # horizontal_view_angle_degrees, see camera documentation
+    #K, dist_coeffs = calibrate_camera_known(horizontal_view_angle_degrees = 31.4,
+    #                                        image_width_pixels = img_shape[0],
+    #                                        image_height_pixels = img_shape[1])
+    #print(K)
+
     print("getImages")
     allImages, img_shape = get_images(folderName=args.folderName, pre_process=False)
 
     print("rectifyCamera")
-    allImages = rectifyCamera(images=allImages, K=K, dist_coeffs=dist_coeffs)
+    #allImages = rectifyCamera(images=allImages, K=K, dist_coeffs=dist_coeffs)
 
     # images = allImages[:]
     images = allImages[12:28]
@@ -61,6 +68,8 @@ def main(args):
         rvecs_list,
         tvecs_list,
         points3d_list,
+        _,
+        _
     ) = bundle_adjustment(
         points3d_list=points3d_list,
         points2d_list=points2d_list2,
@@ -72,11 +81,14 @@ def main(args):
 
     print("estimate_cylinder_dimensions")
     cylinder_radius = estimate_cylinder_dimensions(
-        triangulated_points=points3d_list, scaling_factor=100
+        triangulated_points=points3d_list, scaling_factor=1
     )
+
+    print("Radius: ",cylinder_radius)
     # cylinder_radius = estimate_cylinder_dimensions(triangulated_points=points3d_list, scaling_factor=100)
 
     print("rectify_images_with_cylinder")
+    #print(np.mean(dist_coeffs, axis=0))
     rectified_images_ba = rectify_images_cylindrical_ba(
         images=images, K=K, rvecs=rvecs_list, tvecs=tvecs_list, r=cylinder_radius
     )
@@ -96,13 +108,13 @@ def main(args):
     )
 
     # print("displayImages")
-    displayImages(img1=panorama_no_warp_cv, img2=panorama_ba_cv)
+    #displayImages(img1=panorama_no_warp_cv, img2=panorama_ba_cv)
 
-    print("saveImage")
+    #print("saveImage")
     # saveImage(file_path = "panorama_no_warp.png", image=panorama_no_warp)
     # saveImage(file_path = "panorama_ba.png", image=panorama_ba)
-    # saveImage(file_path = "panorama_no_warp_cv.png", image=panorama_no_warp_cv)
-    # saveImage(file_path = "panorama_ba_cv.png", image=panorama_ba_cv)
+    saveImage(file_path = "panorama_no_warp_cv.png", image=panorama_no_warp_cv)
+    saveImage(file_path = "panorama_ba_cv.png", image=panorama_ba_cv)
 
 
 if __name__ == "__main__":
