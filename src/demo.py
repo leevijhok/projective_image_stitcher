@@ -32,7 +32,7 @@ def main(args):
     allImages, img_shape = get_images(folderName=args.folderName, pre_process=False)
 
     print("rectifyCamera")
-    #allImages = rectifyCamera(images=allImages, K=K, dist_coeffs=dist_coeffs)
+    allImages = rectifyCamera(images=allImages, K=K, dist_coeffs=dist_coeffs)
 
     # images = allImages[:]
     images = allImages[12:28]
@@ -64,6 +64,7 @@ def main(args):
     )
 
     print("bundle_adjustment")
+
     (
         rvecs_list,
         tvecs_list,
@@ -76,18 +77,18 @@ def main(args):
         P_list=P_list2,
         K=K,
         dist_coeffs=dist_coeffs,
-        img_shape=img_shape,
+        img_shape=img_shape
     )
 
     print("estimate_cylinder_dimensions")
     cylinder_radius = estimate_cylinder_dimensions(
-        triangulated_points=points3d_list, scaling_factor=1
+        triangulated_points=points3d_list, scaling_factor=100
     )
 
     print("Radius: ",cylinder_radius)
-    # cylinder_radius = estimate_cylinder_dimensions(triangulated_points=points3d_list, scaling_factor=100)
 
     print("rectify_images_with_cylinder")
+    #images = rectifyCamera(images=images, K=K, dist_coeffs=dist_coeffs)
     #print(np.mean(dist_coeffs, axis=0))
     rectified_images_ba = rectify_images_cylindrical_ba(
         images=images, K=K, rvecs=rvecs_list, tvecs=tvecs_list, r=cylinder_radius

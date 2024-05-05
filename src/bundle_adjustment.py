@@ -52,16 +52,16 @@ def bundle_adjustment(points3d_list, points2d_list, P_list, K, dist_coeffs, img_
         bounds_tvec = [(-10, 10)] * 3  # 3 translation vectors
 
         # Define bounds for 3D points
-        bounds_points3d = [(-1000, 1000)] * (num_points * 3)  # Adjust num_points as needed
+        bounds_points3d = [(-10, 10)] * (num_points * 3)  # Adjust num_points as needed
 
         # Flatten dist_coeffs to ensure it's a 1D array
         dist_coeffs_flat = np.ravel(dist_coeffs)
 
         # Define bounds for distortion coefficients
-        bounds_dist_coeffs = [(-0.01, 0.01)] * len(dist_coeffs_flat)  # Adjust the length of bounds for distortion coefficients
+        bounds_dist_coeffs = [(-1, 1)] * len(dist_coeffs_flat)  # Adjust the length of bounds for distortion coefficients
 
         # Define bounds for intrinsic matrix K
-        bounds_K = [(0.1, 10)] * 9  # Adjust the bounds as per your requirement
+        bounds_K = [(-10, 10)] * 9  # Adjust the bounds as per your requirement
 
         # Concatenate bounds for all parameters
         bounds = bounds_rvec + bounds_tvec + bounds_points3d + bounds_dist_coeffs + bounds_K
@@ -106,6 +106,52 @@ def bundle_adjustment(points3d_list, points2d_list, P_list, K, dist_coeffs, img_
         K_list.append(optimized_K)
 
     return rvecs_list, tvecs_list, points3d_list_optimized, dist_coeffs_list, K_list
+
+
+def bundle_adjustment_ls(points3d_list, points2d_list, P_list, K, dist_coeffs):
+
+    rvecs_list = []
+    tvecs_list = []
+    points3d_list_optimized = []
+    dist_coeffs_list = []
+
+    for points_2d, points_3d, P in zip(points2d_list, points3d_list, P_list):
+
+        num_points = len(points_3d)
+
+        # Flatten dist_coeffs to ensure it's a 1D array
+        dist_coeffs_flat = np.ravel(dist_coeffs)
+
+        # Use solvePnP to get initial guess for rotation and translation
+        _, rvec_init, tvec_init, _, _, _, _ = cv2.decomposeProjectionMatrix(P)
+        tvec_init = tvec_init[:3] / tvec_init[3]
+        rvec_init, _ = cv2.Rodrigues(rvec_init)
+
+        # Flatten and concatenate rvec_init, tvec_init, points_3d, and dist_coeffs
+        initial_params = np.hstack([rvec_init.flatten(), tvec_init.flatten(), points_3d.flatten(), dist_coeffs_flat.flatten()])
+
+        # Perform optimization
+        result = least_squares(
+            reprojection_error,
+            initial_params,
+            method="trf",  # Trust Region Reflective algorithm
+            max_nfev=100,  # Maximum number of iterations
+            args=(points_3d, points_2d, K, dist_coeffs),  # Pass dist_coeffs as an additional argument
+        )
+
+        # Extract optimized parameters
+        optimized_params = result.x
+        optimized_rvec = optimized_params[:3]
+        optimized_tvec = optimized_params[3:6]
+        optimized_points_3d = optimized_params[6:6+num_points*3].reshape((num_points, 3))
+        optimized_dist_coeffs = optimized_params[6+num_points*3:]
+
+        rvecs_list.append(optimized_rvec)
+        tvecs_list.append(optimized_tvec)
+        points3d_list_optimized.append(optimized_points_3d)
+        dist_coeffs_list.append(optimized_dist_coeffs)
+
+    return rvecs_list, tvecs_list, points3d_list_optimized, dist_coeffs_list
 
 
 def rectify_images(images, rvecs_list, tvecs_list, K, dist_coeffs):
